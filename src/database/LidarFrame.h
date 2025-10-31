@@ -236,6 +236,18 @@ public:
      */
     void clear_local_map();
     
+    /**
+     * @brief Clear heavy data for old keyframes (keep only feature_cloud and pose)
+     * Clears: raw_cloud, processed_cloud, local_map, kdtrees, correspondences
+     */
+    void clear_heavy_data_for_old_keyframe();
+    
+    /**
+     * @brief Clear all clouds for non-keyframe (keep only pose and relative_pose)
+     * Clears: raw_cloud, processed_cloud, feature_cloud, correspondences, kdtrees
+     */
+    void clear_non_keyframe_data();
+    
     // ===== KdTree Management =====
     
     /**

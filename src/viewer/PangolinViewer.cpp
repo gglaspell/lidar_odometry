@@ -433,6 +433,15 @@ void PangolinViewer::update_icp_debug_clouds(PointCloudConstPtr pre_icp_cloud,
 void PangolinViewer::add_trajectory_frame(std::shared_ptr<database::LidarFrame> frame) {
     std::lock_guard<std::mutex> lock(m_data_mutex);
     m_trajectory_frames.push_back(frame);
+    
+    // Apply sliding window: keep only last MAX_TRAJECTORY_FRAMES frames
+    if (m_trajectory_frames.size() > MAX_TRAJECTORY_FRAMES) {
+        size_t excess = m_trajectory_frames.size() - MAX_TRAJECTORY_FRAMES;
+        m_trajectory_frames.erase(m_trajectory_frames.begin(), 
+                                  m_trajectory_frames.begin() + excess);
+        spdlog::debug("[PangolinViewer] Trajectory sliding window: removed {} old frames, keeping {}", 
+                     excess, m_trajectory_frames.size());
+    }
 }
 
 void PangolinViewer::update_optimized_trajectory(const std::map<int, Matrix4f>& optimized_poses) {

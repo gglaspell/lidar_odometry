@@ -270,6 +270,7 @@ private:
     
     // Frames and features
     std::shared_ptr<database::LidarFrame> m_previous_frame;
+    std::shared_ptr<database::LidarFrame> m_old_frame;  // For memory cleanup
     std::deque<std::shared_ptr<database::LidarFrame>> m_keyframes;
     
     // Local map

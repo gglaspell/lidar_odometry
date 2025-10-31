@@ -223,6 +223,9 @@ private:
     float m_coordinate_frame_size;                     ///< Coordinate frame axis length
     float m_coordinate_frame_width;                    ///< Coordinate frame line width
     
+    // ===== Memory Management =====
+    static constexpr size_t MAX_TRAJECTORY_FRAMES = 1000; ///< Maximum trajectory frames to keep
+    
     // ===== State =====
     bool m_initialized;                                 ///< Initialization state
     bool m_finish_pressed;                             ///< Finish button state

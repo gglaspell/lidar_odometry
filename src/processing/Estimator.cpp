@@ -174,8 +174,14 @@ bool Estimator::process_frame(std::shared_ptr<database::LidarFrame> current_fram
         create_keyframe(current_frame);
     }
     
-    // Update for next iteration
-    m_previous_frame = current_frame;
+    // Update for next iteration - clean up old frame first
+    m_old_frame = m_previous_frame;  // Save old frame
+    m_previous_frame = current_frame;  // Update to new frame
+    
+    // Clean up old frame (non-keyframe) - keep only pose info
+    if (m_old_frame && !m_old_frame->is_keyframe()) {
+        m_old_frame->clear_non_keyframe_data();
+    }
     
     auto end_time = std::chrono::high_resolution_clock::now();
     auto total_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -432,10 +438,10 @@ void Estimator::create_keyframe(std::shared_ptr<database::LidarFrame> frame)
     // Build KdTree for the local map at keyframe creation
     frame->build_local_map_kdtree();
     
-    // Clean up previous last keyframe's kdtree to save memory
+    // Clean up previous last keyframe's heavy data (keep only feature_cloud for visualization)
     if (m_last_keyframe && m_last_keyframe != frame) {
-        m_last_keyframe->clear_local_map_kdtree();
-        spdlog::debug("[Estimator] Cleared kdtree for previous keyframe {}", m_last_keyframe->get_keyframe_id());
+        m_last_keyframe->clear_heavy_data_for_old_keyframe();
+        spdlog::debug("[Estimator] Cleared heavy data for previous keyframe {}", m_last_keyframe->get_keyframe_id());
     }
     
     // Update last keyframe reference for optimization
@@ -615,14 +621,14 @@ void Estimator::process_loop_closures(std::shared_ptr<database::LidarFrame> curr
         spdlog::warn("[Estimator] Could not find matched keyframe {} in database", candidate.match_keyframe_id);
         return;
     }
-    
-    // Get local maps from both keyframes
-    auto current_local_map = current_keyframe->get_local_map();
-    auto matched_local_map = matched_keyframe->get_local_map();
-    
-    if (!current_local_map || !matched_local_map || 
-        current_local_map->empty() || matched_local_map->empty()) {
-        spdlog::warn("[Estimator] Empty local maps for loop {} <-> {}", 
+
+    // Get feature clouds from both keyframes
+    auto local_feature_matched = matched_keyframe->get_feature_cloud();
+    auto local_feature_current = current_keyframe->get_feature_cloud();
+
+    if (!local_feature_matched || !local_feature_current ||
+        local_feature_matched->empty() || local_feature_current->empty()) {
+        spdlog::warn("[Estimator] Empty feature clouds for loop {} <-> {}", 
                     candidate.query_keyframe_id, candidate.match_keyframe_id);
         return;
     }
@@ -1050,21 +1056,23 @@ bool Estimator::run_pgo_for_loop(
             }
         }
     }
-    
-    if (!matched_keyframe) {
-        spdlog::warn("[Background] Could not find matched keyframe {}", 
+
+    if (!matched_keyframe)
+    {
+        spdlog::warn("[Background] Could not find matched keyframe {}",
                      candidate.match_keyframe_id);
         return false;
     }
-    
-    // Get local maps from both keyframes
-    auto current_local_map = current_keyframe->get_local_map();
-    auto matched_local_map = matched_keyframe->get_local_map();
-    
-    if (!current_local_map || !matched_local_map || 
-        current_local_map->empty() || matched_local_map->empty()) {
-        spdlog::warn("[Background] Empty local maps for loop {} <-> {}", 
-                    candidate.query_keyframe_id, candidate.match_keyframe_id);
+
+    // Get feature clouds from both keyframes
+    auto local_feature_matched = matched_keyframe->get_feature_cloud();
+    auto local_feature_current = current_keyframe->get_feature_cloud();
+
+    if (!local_feature_matched || !local_feature_current ||
+        local_feature_matched->empty() || local_feature_current->empty())
+    {
+        spdlog::warn("[Background] Empty feature clouds for loop {} <-> {}",
+                     candidate.query_keyframe_id, candidate.match_keyframe_id);
         return false;
     }
 

@@ -185,10 +185,6 @@ KittiPlayerResult KittiPlayer::run(const KittiPlayerConfig& config) {
         double avg_icp_iterations, avg_icp_time_ms;
         m_estimator->get_optimization_statistics(avg_icp_iterations, avg_icp_time_ms);
         
-        spdlog::info("[KittiPlayer] ICP Statistics:");
-        spdlog::info("  - Average iterations per ICP: {:.2f}", avg_icp_iterations);
-        spdlog::info("  - Average time per ICP: {:.2f} ms", avg_icp_time_ms);
-        
         // Generate output path for display
         std::string display_output_path = "";
         if (config.enable_statistics) {

@@ -323,6 +323,47 @@ void LidarFrame::clear_local_map() {
     }
 }
 
+void LidarFrame::clear_heavy_data_for_old_keyframe() {
+    // Keep: m_feature_cloud, m_pose, m_relative_pose, m_keyframe_id
+    // Clear: everything else
+    
+    m_raw_cloud.reset();
+    m_processed_cloud.reset();
+    m_feature_cloud_global.reset();
+    m_local_map.reset();
+    
+    m_kdtree.reset();
+    m_kdtree_built = false;
+    m_local_map_kdtree.reset();
+    m_local_map_kdtree_built = false;
+    
+    m_correspondences.clear();
+    m_correspondences.shrink_to_fit();
+    
+    spdlog::debug("[LidarFrame] Cleared heavy data for old keyframe {}", m_keyframe_id);
+}
+
+void LidarFrame::clear_non_keyframe_data() {
+    // Keep: m_pose, m_relative_pose, m_frame_id, m_timestamp
+    // Clear: all clouds and search structures
+    
+    m_raw_cloud.reset();
+    m_processed_cloud.reset();
+    m_feature_cloud.reset();
+    m_feature_cloud_global.reset();
+    m_local_map.reset();
+    
+    m_kdtree.reset();
+    m_kdtree_built = false;
+    m_local_map_kdtree.reset();
+    m_local_map_kdtree_built = false;
+    
+    m_correspondences.clear();
+    m_correspondences.shrink_to_fit();
+    
+    spdlog::debug("[LidarFrame] Cleared non-keyframe data for frame {}", m_frame_id);
+}
+
 KdTreePtr LidarFrame::get_local_map_kdtree() {
     if (m_local_map_kdtree_built && m_local_map_kdtree) {
         return m_local_map_kdtree;
