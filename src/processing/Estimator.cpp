@@ -435,6 +435,9 @@ void Estimator::create_keyframe(std::shared_ptr<database::LidarFrame> frame)
     // Store filtered local map in keyframe for optimization::IterativeClosestPointOptimizer
     frame->set_local_map(filtered_local_map);
     
+    // Update the global feature map
+    *m_feature_map = *filtered_local_map;
+    
     // Build KdTree for the local map at keyframe creation
     frame->build_local_map_kdtree();
     
